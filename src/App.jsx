@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { CatalogoPage } from './pages/CatalogoPage';
 import { ProductosPage } from './pages/ProductosPage';
+import { CategoriasPage } from './pages/CategoriasPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { obtenerProductos } from './services/productService';
 import { obtenerCategorias } from './services/categoryService';
@@ -32,9 +33,7 @@ function App() {
       });
   };
 
-  useEffect(() => {
-    cargarProductos();
-
+  const cargarCategorias = () => {
     obtenerCategorias()
       .then((data) => {
         setCategorias(data);
@@ -42,6 +41,11 @@ function App() {
       .catch((error) => {
         console.error('Error al obtener las categorías:', error);
       });
+  };
+
+  useEffect(() => {
+    cargarProductos();
+    cargarCategorias();
   }, []);
 
   const handleAddToCart = () => {
@@ -85,6 +89,19 @@ function App() {
                 productos={productos}
                 categorias={categorias}
                 onActualizarProductos={cargarProductos}
+                cargando={cargando}
+              />
+            } 
+          />
+
+          {/* Ruta 404 para cualquier otra URL */}
+                    {/* Ruta de Gestión de Categorías */}
+          <Route 
+            path="/categorias" 
+            element={
+              <CategoriasPage 
+                categorias={categorias}
+                onActualizarCategorias={cargarCategorias}
                 cargando={cargando}
               />
             } 
