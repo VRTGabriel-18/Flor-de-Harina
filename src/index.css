@@ -44,6 +44,10 @@ button { cursor: pointer; }
 
 #root { min-height: 100vh; }
 
+.toast { position: fixed; right: 24px; bottom: 24px; z-index: 100; max-width: min(360px, calc(100vw - 48px)); padding: 12px 16px; border-radius: 6px; color: #fff; box-shadow: 0 8px 24px rgb(61 43 31 / 18%); font-weight: 600; }
+.toast-ok { background: var(--color-ok); }
+.toast-error { background: var(--color-error); }
+
 .app-layout { display: flex; flex-direction: column; min-height: 100vh; }
 
 .app-contenido {
@@ -53,6 +57,13 @@ button { cursor: pointer; }
   margin: 0 auto;
   padding: 32px 24px 56px;
 }
+
+.pedido-lista { display: grid; gap: 16px; }
+.pedido-item { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-borde); }
+.pedido-controles { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.pedido-controles label { font-size: 0.85rem; color: var(--color-suave); }
+.pedido-cantidad { width: 76px; }
+.pedido-total { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 2px solid var(--color-texto); font-size: 1.15rem; }
 
 /* ========== Header (con toldo de pastelería) ========== */
 .header { position: sticky; top: 0; z-index: 50; }
@@ -76,6 +87,7 @@ button { cursor: pointer; }
 }
 
 .header-inner {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -84,11 +96,26 @@ button { cursor: pointer; }
   padding: 12px 24px;
 }
 
-.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; order: 0; white-space: nowrap; }
+.marca { display: flex; align-items: center; gap: 10px; margin-right: auto; text-decoration: none; order: 0; white-space: nowrap; }
 .marca-icono { font-size: 1.6rem; line-height: 1; }
 .marca-nombre { font-family: var(--fuente-titulo); font-weight: 600; font-size: 1.4rem; letter-spacing: -0.01em; }
 
-.nav-principal { order: 1; flex: 1; display: flex; justify-content: flex-end; gap: 2px; }
+.nav-principal {
+  position: absolute;
+  top: 100%;
+  right: 24px;
+  z-index: 2;
+  order: 3;
+  display: none;
+  flex-direction: column;
+  min-width: 220px;
+  padding: 8px;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background-color: var(--color-texto);
+  box-shadow: 0 10px 24px rgba(58, 36, 32, 0.2);
+}
+.nav-principal.abierto { display: flex; }
 
 .nav-link {
   padding: 8px 9px;
@@ -127,10 +154,12 @@ button { cursor: pointer; }
   font-weight: 700;
   text-align: center;
 }
+.sesion { order: 2; display: flex; align-items: center; gap: 8px; }
+.sesion-nombre { max-width: 20ch; overflow: hidden; color: var(--color-acento); font-size: 0.88rem; text-overflow: ellipsis; white-space: nowrap; }
 
 .nav-toggle {
   order: 2;
-  display: none;
+  display: inline-flex;
   padding: 8px 12px;
   border: 1px solid rgba(250, 237, 205, 0.4);
   border-radius: 8px;
@@ -280,6 +309,10 @@ button { cursor: pointer; }
 .input:disabled { background-color: var(--color-fondo); }
 textarea.input { resize: vertical; }
 
+.productos-orden { display: grid; gap: 10px; }
+.producto-orden-fila { display: grid; grid-template-columns: minmax(0, 1fr) 100px auto; align-items: center; gap: 10px; }
+.producto-orden-cantidad { text-align: center; }
+
 .form-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .aviso-form { margin-top: 14px; color: var(--color-error); font-size: 0.9rem; font-weight: 500; }
 
@@ -347,11 +380,11 @@ textarea.input { resize: vertical; }
 
 /* ========== Adaptable ========== */
 @media (max-width: 1200px) {
-  .header-inner { flex-wrap: wrap; }
   .marca { margin-right: auto; }
-  .nav-toggle { display: inline-flex; }
-  .nav-principal { order: 3; flex-basis: 100%; display: none; flex-direction: column; padding-bottom: 6px; }
-  .nav-principal.abierto { display: flex; }
+}
+
+@media (max-width: 640px) {
+  .nav-principal { right: 16px; left: 16px; min-width: 0; }
   .nav-link { padding: 10px 12px; }
 }
 
@@ -364,9 +397,12 @@ textarea.input { resize: vertical; }
   .header-inner { padding: 10px 16px; }
   .menu-categorias-inner { padding: 12px 16px; }
   .carrito-texto { display: none; }
+  .sesion-nombre { display: none; }
   .banner { padding: 32px 24px; }
   .catalogo-encabezado { flex-direction: column; align-items: flex-start; gap: 4px; }
   .form-grid { grid-template-columns: 1fr; }
+  .producto-orden-fila { grid-template-columns: minmax(0, 1fr) 88px; }
+  .producto-orden-fila .btn { grid-column: 1 / -1; justify-self: start; }
   .panel { padding: 18px; }
 
   /* Las tablas pasan a tarjetas: así los botones de acción siempre se ven sin desplazar */
@@ -374,9 +410,13 @@ textarea.input { resize: vertical; }
   .tabla, .tabla tbody, .tabla tr { display: block; }
   .tabla tr { padding: 10px 0; border-bottom: 1px solid var(--color-borde); }
   .tabla td { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; border: none; text-align: right; }
+  .tabla td:not(.acciones) { overflow-wrap: anywhere; }
   .tabla td::before { content: attr(data-label); font-weight: 600; text-align: left; }
   .tabla td.acciones { justify-content: flex-end; padding-top: 10px; }
   .tabla td.acciones::before { content: none; }
+  .pedido-item { align-items: stretch; flex-direction: column; gap: 12px; }
+  .pedido-controles { justify-content: flex-start; }
+  .pedido-total { font-size: 1rem; }
   .footer-inner { grid-template-columns: 1fr; padding: 32px 16px 24px; }
 }
 

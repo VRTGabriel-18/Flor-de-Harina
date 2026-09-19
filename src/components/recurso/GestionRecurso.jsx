@@ -4,9 +4,11 @@ import { useRecurso } from '../../hooks/useRecurso';
 import { crear, actualizar, eliminar } from '../../services/apiService';
 import { FormularioRecurso } from './FormularioRecurso';
 import { ListaRecurso } from './ListaRecurso';
+import { useToast } from '../../hooks/useToast';
 
 export function GestionRecurso({ recurso, onCambio }) {
   const config = RECURSOS[recurso];
+  const { mostrarToast } = useToast();
   const { datos, cargando, error, recargar } = useRecurso(config.ruta);
 
   const [editando, setEditando] = useState(null);
@@ -25,15 +27,18 @@ export function GestionRecurso({ recurso, onCambio }) {
     try {
       if (editando) {
         await actualizar(config.ruta, editando.id, datosFormulario);
+        mostrarToast({ tipo: 'ok', texto: `${config.singular} actualizado correctamente.` });
         setMensaje({ tipo: 'ok', texto: 'Registro actualizado correctamente.' });
       } else {
         await crear(config.ruta, datosFormulario);
+        mostrarToast({ tipo: 'ok', texto: `${config.singular} creado correctamente.` });
         setMensaje({ tipo: 'ok', texto: 'Registro creado correctamente.' });
       }
       setEditando(null);
       setFormKey((k) => k + 1);
       refrescar();
     } catch (err) {
+      mostrarToast({ tipo: 'error', texto: `No se pudo guardar ${config.singular.toLowerCase()}.` });
       setMensaje({ tipo: 'error', texto: `No se pudo guardar. ${err.message}.` });
     } finally {
       setGuardando(false);
@@ -57,10 +62,12 @@ export function GestionRecurso({ recurso, onCambio }) {
     setMensaje(null);
     try {
       await eliminar(config.ruta, fila.id);
+      mostrarToast({ tipo: 'ok', texto: `${config.singular} eliminado correctamente.` });
       if (editando && editando.id === fila.id) handleCancelar();
       setMensaje({ tipo: 'ok', texto: 'Registro eliminado correctamente.' });
       refrescar();
     } catch (err) {
+      mostrarToast({ tipo: 'error', texto: `No se pudo eliminar ${config.singular.toLowerCase()}.` });
       setMensaje({ tipo: 'error', texto: `No se pudo eliminar. ${err.message}.` });
     }
   };

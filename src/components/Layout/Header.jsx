@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu } from './Menu';
 import { RECURSOS } from '../../resources';
+import { useAuth } from '../../hooks/useAuth';
 
 const claseLink = ({ isActive }) => `nav-link${isActive ? ' activo' : ''}`;
 
 export function Header({ categorias = [], categoriaActiva, onSelectCategoria, cartCount = 0, informacion }) {
   const [abierto, setAbierto] = useState(false);
+  const { usuario, cerrarSesion } = useAuth();
   const esCatalogo = useLocation().pathname === '/';
   const cerrar = () => setAbierto(false);
 
@@ -20,10 +22,19 @@ export function Header({ categorias = [], categoriaActiva, onSelectCategoria, ca
           </Link>
 
           {esCatalogo && (
-            <button type="button" className="carrito" aria-label={`Mi pedido, ${cartCount} productos`}>
+            <Link to="/pedido" className="carrito" aria-label={`Mi pedido, ${cartCount} productos`}>
               🛒 <span className="carrito-texto">Mi pedido</span>
               {cartCount > 0 && <span className="carrito-cuenta">{cartCount}</span>}
-            </button>
+            </Link>
+          )}
+
+          {usuario ? (
+            <div className="sesion">
+              <span className="sesion-nombre">{usuario.nombre}</span>
+              <button type="button" className="btn btn-suave btn-chico" onClick={cerrarSesion}>Cerrar sesión</button>
+            </div>
+          ) : (
+            <Link to="/login" className="btn btn-suave btn-chico" onClick={cerrar}>Iniciar sesión</Link>
           )}
 
           <button

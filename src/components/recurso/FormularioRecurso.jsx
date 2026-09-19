@@ -6,6 +6,7 @@ import { useRecurso } from '../../hooks/useRecurso';
 // En campos numéricos deja solo dígitos ("$3.500" -> "3500").
 const valorInicial = (campo, registro) => {
   const valor = registro?.[campo.name];
+  if (campo.tipo === 'checkbox') return Boolean(valor);
   if (valor === undefined || valor === null) return '';
   return campo.tipo === 'number' ? String(valor).replace(/[^\d]/g, '') : String(valor);
 };
@@ -50,6 +51,96 @@ function CampoSelect({ campo, valor, onChange }) {
     : <OpcionesSelect campo={campo} opciones={campo.opciones ?? []} valor={valor} onChange={onChange} />;
 }
 
+const cantidades = Array.from({ length: 20 }, (_, indice) => indice + 1);
+
+const leerProductosOrden = (valor) => {
+  try {
+    const productos = JSON.parse(valor || '[]');
+    return Array.isArray(productos) && productos.length > 0
+      ? productos.map((item) => ({
+        producto: String(item.producto ?? ''),
+        nombre: item.nombre ?? '',
+        cantidad: Number(item.cantidad) || 1,
+      }))
+      : [{ producto: '', nombre: '', cantidad: 1 }];
+  } catch {
+    return [{ producto: '', nombre: '', cantidad: 1 }];
+  }
+};
+
+function ProductosOrden({ campo, valor, onChange }) {
+  const { datos: productos, cargando } = useRecurso(RECURSOS.productos.ruta);
+  const [lineas, setLineas] = useState(() => leerProductosOrden(valor));
+
+  const actualizar = (nuevasLineas) => {
+    setLineas(nuevasLineas);
+    onChange({ target: { name: campo.name, value: JSON.stringify(nuevasLineas) } });
+  };
+
+  const cambiarLinea = (indice, propiedad, nuevoValor) => {
+    const nuevasLineas = lineas.map((linea, posicion) => {
+      if (posicion !== indice) return linea;
+      if (propiedad === 'producto') {
+        const producto = productos.find((item) => String(item.id) === nuevoValor);
+        return { ...linea, producto: nuevoValor, nombre: producto?.nombre ?? linea.nombre };
+      }
+      return { ...linea, [propiedad]: Number(nuevoValor) };
+    });
+    actualizar(nuevasLineas);
+  };
+
+  const quitarLinea = (indice) => {
+    const nuevasLineas = lineas.filter((_, posicion) => posicion !== indice);
+    actualizar(nuevasLineas);
+  };
+
+  return (
+    <div className="productos-orden">
+      {lineas.map((linea, indice) => (
+        <div className="producto-orden-fila" key={`${indice}-${linea.producto}`}>
+          <select
+            className="input"
+            aria-label={`Producto ${indice + 1}`}
+            value={linea.producto}
+            onChange={(evento) => cambiarLinea(indice, 'producto', evento.target.value)}
+            disabled={cargando}
+            required
+          >
+            <option value="">{cargando ? 'Cargando productos...' : 'Selecciona un producto'}</option>
+            {linea.producto && !productos.some((producto) => String(producto.id) === linea.producto) && (
+              <option value={linea.producto}>{linea.nombre || linea.producto}</option>
+            )}
+            {productos.map((producto) => (
+              <option key={producto.id} value={producto.id}>{producto.nombre}</option>
+            ))}
+          </select>
+
+          <select
+            className="input producto-orden-cantidad"
+            aria-label={`Cantidad del producto ${indice + 1}`}
+            value={linea.cantidad}
+            onChange={(evento) => cambiarLinea(indice, 'cantidad', evento.target.value)}
+          >
+            {cantidades.map((cantidad) => <option key={cantidad} value={cantidad}>{cantidad}</option>)}
+          </select>
+
+          <button type="button" className="btn btn-peligro btn-chico" onClick={() => quitarLinea(indice)}>
+            Quitar
+          </button>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        className="btn btn-suave btn-chico"
+        onClick={() => actualizar([...lineas, { producto: '', nombre: '', cantidad: 1 }])}
+      >
+        + Agregar producto
+      </button>
+    </div>
+  );
+}
+
 export function FormularioRecurso({ config, registro, guardando, onGuardar, onCancelar }) {
   const [valores, setValores] = useState(() =>
     Object.fromEntries(config.campos.map((c) => [c.name, valorInicial(c, registro)]))
@@ -59,13 +150,24 @@ export function FormularioRecurso({ config, registro, guardando, onGuardar, onCa
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setValores((prev) => ({ ...prev, [name]: value }));
+    const campo = config.campos.find((item) => item.name === name);
+    setValores((prev) => ({ ...prev, [name]: campo?.tipo === 'checkbox' ? e.target.checked : value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const faltantes = config.campos.filter((c) => c.requerido && !valores[c.name].trim());
+    const faltantes = config.campos.filter((c) => {
+      if (!c.requerido) return false;
+      if (c.tipo === 'productos-orden') {
+        try {
+          return !JSON.parse(valores[c.name] || '[]').some((producto) => producto.producto);
+        } catch {
+          return true;
+        }
+      }
+      return !String(valores[c.name]).trim();
+    });
     if (faltantes.length > 0) {
       setAviso(`Completa: ${faltantes.map((c) => c.label).join(', ')}.`);
       return;
@@ -74,6 +176,10 @@ export function FormularioRecurso({ config, registro, guardando, onGuardar, onCa
     setAviso('');
     const datos = {};
     config.campos.forEach((c) => {
+      if (c.tipo === 'checkbox') {
+        datos[c.name] = Boolean(valores[c.name]);
+        return;
+      }
       const texto = valores[c.name].trim();
       datos[c.name] = c.tipo === 'number' && texto !== '' ? Number(texto) : texto;
     });
@@ -94,6 +200,8 @@ export function FormularioRecurso({ config, registro, guardando, onGuardar, onCa
 
               {c.tipo === 'select' ? (
                 <CampoSelect campo={c} valor={valores[c.name]} onChange={handleChange} />
+              ) : c.tipo === 'productos-orden' ? (
+                <ProductosOrden campo={c} valor={valores[c.name]} onChange={handleChange} />
               ) : c.tipo === 'textarea' ? (
                 <textarea
                   id={c.name}
@@ -105,6 +213,17 @@ export function FormularioRecurso({ config, registro, guardando, onGuardar, onCa
                   value={valores[c.name]}
                   onChange={handleChange}
                 />
+              ) : c.tipo === 'checkbox' ? (
+                <label className="campo-checkbox">
+                  <input
+                    id={c.name}
+                    name={c.name}
+                    type="checkbox"
+                    checked={Boolean(valores[c.name])}
+                    onChange={handleChange}
+                  />
+                  <span>{c.label}</span>
+                </label>
               ) : (
                 <input
                   id={c.name}

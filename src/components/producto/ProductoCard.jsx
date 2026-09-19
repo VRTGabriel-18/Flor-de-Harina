@@ -1,6 +1,8 @@
 import { formatearPrecio } from '../../utils/formato';
+import { useToast } from '../../hooks/useToast';
 
 export function ProductoCard({ producto, onAddToCart }) {
+  const { mostrarToast } = useToast();
   const { nombre, descripcion, precio, imagen, tag } = producto;
 
   return (
@@ -18,7 +20,10 @@ export function ProductoCard({ producto, onAddToCart }) {
 
         <div className="producto-pie">
           <span className="producto-precio">{formatearPrecio(precio)}</span>
-          <button type="button" className="btn btn-primario btn-chico" onClick={() => onAddToCart(producto)}>
+          <button type="button" className="btn btn-primario btn-chico" onClick={() => {
+            onAddToCart(producto);
+            mostrarToast({ tipo: 'ok', texto: `${nombre} agregado al pedido.` });
+          }}>
             Agregar
           </button>
         </div>
