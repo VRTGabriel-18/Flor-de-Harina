@@ -1,6 +1,6 @@
 import { GestionCategorias } from '../components/categoria/GestionCategorias';
 
-export function CategoriasPage({ categorias, onActualizarCategorias, cargando }) {
+export default function CategoriasPage({ categorias, onActualizarCategorias, cargando }) {
   return (
     <GestionCategorias
       categorias={categorias}

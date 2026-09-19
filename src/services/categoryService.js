@@ -1,36 +1,26 @@
-const API_URL = 'https://6aa9f0dfff4dd5698b4dea79.mockapi.io/categoria';
+const API_BASE_URL = 'https://6aae9409606bd915d110ecc1.mockapi.io';
 
-// Obtener todas las categorías
-export const obtenerCategorias = () => {
-  return fetch(API_URL)
-    .then((response) => response.json());
-};
+export const getCategorias = () => 
+  fetch(`${API_BASE_URL}/categorias`).then(res => res.json());
 
-// Crear una nueva categoría
-export const crearCategoria = (categoria) => {
-  return fetch(API_URL, {
+export const createCategoria = (data) => 
+  fetch(`${API_BASE_URL}/categorias`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(categoria)
-  }).then((response) => response.json());
-};
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(res => res.json());
 
-// Actualizar una categoría existente
-export const actualizarCategoria = (id, categoria) => {
-  return fetch(`${API_URL}/${id}`, {
+// Alias en español requerido por tu componente
+export const crearCategoria = createCategoria;
+
+export const actualizarCategoria = (id, data) => 
+  fetch(`${API_BASE_URL}/categorias/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(categoria)
-  }).then((response) => response.json());
-};
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(res => res.json());
 
-// Eliminar una categoría por ID
-export const eliminarCategoria = (id) => {
-  return fetch(`${API_URL}/${id}`, {
+export const eliminarCategoria = (id) => 
+  fetch(`${API_BASE_URL}/categorias/${id}`, {
     method: 'DELETE'
-  }).then((response) => response.json());
-};
+  }).then(res => res.json());

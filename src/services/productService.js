@@ -1,36 +1,29 @@
-const API_URL = 'https://6aa9f0dfff4dd5698b4dea79.mockapi.io/producto';
+const API_BASE_URL = 'https://6aae9409606bd915d110ecc1.mockapi.io';
 
-// Obtener todos los productos
-export const obtenerProductos = () => {
-  return fetch(API_URL)
-    .then((response) => response.json());
-};
+export const getProductos = () => 
+  fetch(`${API_BASE_URL}/productos`).then(res => res.json());
 
-// Crear un nuevo producto
-export const crearProducto = (producto) => {
-  return fetch(API_URL, {
+export const createProducto = (data) => 
+  fetch(`${API_BASE_URL}/productos`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(producto)
-  }).then((response) => response.json());
-};
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(res => res.json());
 
-// Actualizar un producto existente
-export const actualizarProducto = (id, producto) => {
-  return fetch(`${API_URL}/${id}`, {
+export const updateProducto = (id, data) => 
+  fetch(`${API_BASE_URL}/productos/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(producto)
-  }).then((response) => response.json());
-};
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(res => res.json());
 
-// Eliminar un producto por ID
-export const eliminarProducto = (id) => {
-  return fetch(`${API_URL}/${id}`, {
+export const deleteProducto = (id) => 
+  fetch(`${API_BASE_URL}/productos/${id}`, {
     method: 'DELETE'
-  }).then((response) => response.json());
-};
+  }).then(res => res.json());
+
+// Alias en español
+export const obtenerProductos = getProductos;
+export const crearProducto = createProducto;
+export const actualizarProducto = updateProducto;
+export const eliminarProducto = deleteProducto;

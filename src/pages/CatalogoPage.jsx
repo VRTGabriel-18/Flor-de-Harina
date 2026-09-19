@@ -1,16 +1,13 @@
-import { Banner } from '../components/Banner';
-import { Product } from '../components/Product';
+import { ProductoCard } from '../components/producto/ProductoCard';
+import Banner from '../components/Layout/Banner';
 
-export function CatalogoPage({ productos, categoriaActiva, onAddToCart, cargando }) {
-  const productosFiltrados = categoriaActiva === "Inicio" 
-    ? productos 
+export function CatalogoPage({ productos = [], categoriaActiva = "Inicio", onAddToCart, cargando }) {
+  const productosFiltrados = categoriaActiva === "Inicio"
+    ? productos
     : productos.filter(p => p.categoria && p.categoria.toLowerCase() === categoriaActiva.toLowerCase());
 
   return (
     <>
-      {/* Banner Section */}
-      <Banner />
-
       {/* Section Header */}
       <section className="catalog-header">
         <div>
@@ -26,17 +23,8 @@ export function CatalogoPage({ productos, categoriaActiva, onAddToCart, cargando
         {cargando ? (
           <p className="loading-text">Cargando productos...</p>
         ) : (
-          productosFiltrados.map((producto) => (
-            <Product
-              key={producto.id}
-              indice={producto.id}
-              nombre={producto.nombre}
-              descripcion={producto.descripcion}
-              precio={producto.precio}
-              imagen={producto.imagen}
-              tag={producto.tag}
-              onAddToCart={onAddToCart}
-            />
+          productosFiltrados.map(p => (
+            <ProductoCard key={p.id} producto={p} onAddToCart={onAddToCart} />
           ))
         )}
       </section>
