@@ -5,7 +5,7 @@ import { RECURSOS } from '../../resources';
 
 const claseLink = ({ isActive }) => `nav-link${isActive ? ' activo' : ''}`;
 
-export function Header({ categorias = [], categoriaActiva, onSelectCategoria, cartCount = 0 }) {
+export function Header({ categorias = [], categoriaActiva, onSelectCategoria, cartCount = 0, informacion }) {
   const [abierto, setAbierto] = useState(false);
   const esCatalogo = useLocation().pathname === '/';
   const cerrar = () => setAbierto(false);
@@ -16,7 +16,7 @@ export function Header({ categorias = [], categoriaActiva, onSelectCategoria, ca
         <div className="header-inner">
           <Link to="/" className="marca" onClick={cerrar}>
             <span className="marca-icono" aria-hidden="true">🥐</span>
-            <span className="marca-nombre">Flor de Harina</span>
+            <span className="marca-nombre">{informacion?.nombre ?? 'Flor de Harina'}</span>
           </Link>
 
           {esCatalogo && (

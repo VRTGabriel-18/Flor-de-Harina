@@ -74,7 +74,7 @@ export const RECURSOS = {
   },
 
   ordenes: {
-    ruta: 'ordenes',
+    ruta: 'orden',
     titulo: 'Órdenes',
     singular: 'Orden',
     icono: '🧾',
@@ -101,5 +101,25 @@ export const RECURSOS = {
       { name: 'nombre', label: 'Nombre', tipo: 'text', requerido: true, placeholder: 'Ej. En horno' },
     ],
     columnas: [{ campo: 'nombre', titulo: 'Nombre' }],
+  },
+
+  informacion: {
+    ruta: 'information',
+    titulo: 'Información',
+    singular: 'Información general',
+    icono: 'ℹ️',
+    descripcion: 'Datos de la pastelería que se muestran en el encabezado y el pie de página del sitio.',
+    campos: [
+      { name: 'nombre', label: 'Nombre de la pastelería', tipo: 'text', requerido: true, placeholder: 'Ej. Flor de Harina' },
+      { name: 'descripcion', label: 'Descripción breve', tipo: 'textarea', requerido: true, placeholder: 'Frase corta sobre el negocio', completo: true },
+      { name: 'direccion', label: 'Dirección', tipo: 'text', requerido: true, placeholder: 'Ej. Cll 32 #2E - 35, Los Patios' },
+      { name: 'horario', label: 'Horario de atención', tipo: 'text', requerido: true, placeholder: 'Ej. Lunes a domingo: 7:00 AM - 7:00 PM' },
+      { name: 'telefono', label: 'Teléfono', tipo: 'text', requerido: true, placeholder: 'Ej. +57 320 458 6532' },
+    ],
+    columnas: [
+      { campo: 'nombre', titulo: 'Nombre' },
+      { campo: 'direccion', titulo: 'Dirección' },
+      { campo: 'telefono', titulo: 'Teléfono' },
+    ],
   },
 };

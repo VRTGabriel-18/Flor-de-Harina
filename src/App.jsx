@@ -16,6 +16,11 @@ function App() {
   // Las categorías alimentan el menú del header y del footer.
   const { datos: categorias, recargar: recargarCategorias } = useRecurso(RECURSOS.categorias.ruta);
 
+  // La información general (nombre, descripción, dirección, horario, teléfono)
+  // viene del Mock API y alimenta el header y el footer. Se usa el primer registro.
+  const { datos: infoLista, recargar: recargarInformacion } = useRecurso(RECURSOS.informacion.ruta);
+  const informacion = infoLista[0];
+
   const seleccionarCategoria = (nombre) => {
     setCategoriaActiva(nombre);
     navigate('/');
@@ -28,6 +33,7 @@ function App() {
         categoriaActiva={categoriaActiva}
         onSelectCategoria={seleccionarCategoria}
         cartCount={cartCount}
+        informacion={informacion}
       />
 
       <main className="app-contenido">
@@ -51,7 +57,13 @@ function App() {
                 <GestionRecurso
                   key={clave}
                   recurso={clave}
-                  onCambio={clave === 'categorias' ? recargarCategorias : undefined}
+                  onCambio={
+                    clave === 'categorias'
+                      ? recargarCategorias
+                      : clave === 'informacion'
+                        ? recargarInformacion
+                        : undefined
+                  }
                 />
               }
             />
@@ -61,7 +73,7 @@ function App() {
         </Routes>
       </main>
 
-      <Footer categorias={categorias} onSelectCategoria={seleccionarCategoria} />
+      <Footer categorias={categorias} onSelectCategoria={seleccionarCategoria} informacion={informacion} />
     </div>
   );
 }
