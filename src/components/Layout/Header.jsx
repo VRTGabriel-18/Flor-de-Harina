@@ -1,68 +1,56 @@
+import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu } from './Menu';
+import { RECURSOS } from '../../resources';
 
-export function Header({ 
-  categorias = [], 
-  categoriaActiva, 
-  onSelectCategoria, 
-  cartCount = 0 
-}) {
-  const location = useLocation();
-  const esCatalogo = location.pathname === '/';
+const claseLink = ({ isActive }) => `nav-link${isActive ? ' activo' : ''}`;
+
+export function Header({ categorias = [], categoriaActiva, onSelectCategoria, cartCount = 0 }) {
+  const [abierto, setAbierto] = useState(false);
+  const esCatalogo = useLocation().pathname === '/';
+  const cerrar = () => setAbierto(false);
 
   return (
-    <header className="header-navbar">
-      <div className="header-inner">
-        {/* Brand / Logo con Link a la ruta raíz */}
-                <Link to="/" className="header-brand" style={{ textDecoration: 'none' }}>
-          <span className="brand-name">Flor de Harina</span>
-        </Link>
-        
-        {/* Nav de categorías sólo en la página de catálogo */}
-        {esCatalogo ? (
-          <Menu categorias={categorias} onSelectCategoria={onSelectCategoria} categoriaActiva={categoriaActiva} />
-        ) : (
-          <div className="view-title-nav">
-            <span className="view-badge">Modo Administración</span>
-          </div>
-        )}
-
-        {/* Naves de rutas con NavLink y Carrito */}
-        <div className="header-actions" style={{ gap: '12px' }}>
-          <div className="view-nav">
-            <NavLink 
-              to="/" 
-              end
-              className={({ isActive }) => `view-btn ${isActive ? "active" : ""}`}
-              style={{ textDecoration: 'none' }}
-            >
-              🛍️ Catálogo
-            </NavLink>
-            <NavLink 
-              to="/productos" 
-              className={({ isActive }) => `view-btn ${isActive ? "active" : ""}`}
-              style={{ textDecoration: 'none' }}
-            >
-              ⚙️ Productos
-            </NavLink>
-            <NavLink 
-              to="/categorias" 
-              className={({ isActive }) => `view-btn ${isActive ? "active" : ""}`}
-              style={{ textDecoration: 'none' }}
-            >
-              🗂️ Categorías
-            </NavLink>
-          </div>
+    <header className="header">
+      <div className="header-barra">
+        <div className="header-inner">
+          <Link to="/" className="marca" onClick={cerrar}>
+            <span className="marca-icono" aria-hidden="true">🥐</span>
+            <span className="marca-nombre">Flor de Harina</span>
+          </Link>
 
           {esCatalogo && (
-            <button className="cart-button">
-              <span className="cart-icon">🛒</span>
-              <span className="cart-label">Mi Pedido</span>
-              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+            <button type="button" className="carrito" aria-label={`Mi pedido, ${cartCount} productos`}>
+              🛒 <span className="carrito-texto">Mi pedido</span>
+              {cartCount > 0 && <span className="carrito-cuenta">{cartCount}</span>}
             </button>
           )}
+
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-expanded={abierto}
+            aria-controls="menu-principal"
+            aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'}
+            onClick={() => setAbierto(!abierto)}
+          >
+            {abierto ? '✕' : '☰'}
+          </button>
+
+          <nav id="menu-principal" className={`nav-principal${abierto ? ' abierto' : ''}`} aria-label="Menú principal">
+            <NavLink to="/" end className={claseLink} onClick={cerrar}>🛍️ Catálogo</NavLink>
+            {Object.entries(RECURSOS).map(([clave, recurso]) => (
+              <NavLink key={clave} to={`/${clave}`} className={claseLink} onClick={cerrar}>
+                {recurso.icono} {recurso.titulo}
+              </NavLink>
+            ))}
+          </nav>
         </div>
       </div>
+
+      {esCatalogo && (
+        <Menu categorias={categorias} categoriaActiva={categoriaActiva} onSelectCategoria={onSelectCategoria} />
+      )}
     </header>
   );
 }

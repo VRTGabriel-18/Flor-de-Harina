@@ -1,26 +1,18 @@
-export function MenuInferior({ categorias = [], setCategoriaActiva }) {
-    const listaCategorias = categorias.filter(cat => (cat.nombre || cat.label) !== "Inicio");
+import { nombresDeCategorias } from '../../utils/categorias';
 
-    return (
-        <>
-        <div className="footer-column">
-              <h4 className="footer-heading">Categorías</h4>
-              <ul className="footer-list">
-                {listaCategorias.map((cat) => {
-                    const nombreCat = cat.nombre || cat.label;
-                    return (
-                        <li key={cat.id}>
-                            <button onClick={() => setCategoriaActiva(nombreCat)}>
-                                {nombreCat}
-                            </button>
-                        </li>
-                    );
-                })}
-              </ul>
-            </div>
-        </>
-    );
+export function MenuInferior({ categorias = [], onSelectCategoria }) {
+  const nombres = ['Todos', ...nombresDeCategorias(categorias)];
+
+  return (
+    <div className="footer-columna">
+      <h4 className="footer-titulo">Categorías</h4>
+      <ul className="footer-lista">
+        {nombres.map((nombre) => (
+          <li key={nombre}>
+            <button type="button" onClick={() => onSelectCategoria(nombre)}>{nombre}</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
-
-
-    
