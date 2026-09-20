@@ -6,9 +6,12 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 
+// basename para GitHub Pages: debe coincidir con `base` en vite.config.js
+const BASENAME = '/Flor-de-Harina';
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={BASENAME}>
       <AuthProvider>
         <ToastProvider>
           <App />
