@@ -11,7 +11,7 @@ const BASENAME = '/Flor-de-Harina';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter basename={BASENAME}>
+    <BrowserRouter basename={import.meta.env.BASENAME}>
       <AuthProvider>
         <ToastProvider>
           <App />
