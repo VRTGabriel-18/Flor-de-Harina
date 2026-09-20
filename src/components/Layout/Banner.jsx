@@ -53,7 +53,7 @@ export function Banner() {
         <div className="banner-hero-visual">
           <div className="hero-img-marco">
             <img
-              src="/hero_pasteles.jpg"
+              src="./hero_pasteles.jpg"
               alt="Flor de Harina — Pasteles artesanales dorados recién horneados"
               className="hero-img-foto"
             />

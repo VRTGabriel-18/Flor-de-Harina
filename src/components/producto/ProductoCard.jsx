@@ -5,7 +5,7 @@ import { useToast } from '../../hooks/useToast';
 export function ProductoCard({ producto, onAddToCart }) {
   const { mostrarToast } = useToast();
   const { nombre, descripcion, precio, imagen, tag, categoria } = producto;
-  const [imgSrc, setImgSrc] = useState(imagen || '/pastel_pollo.jpg');
+  const [imgSrc, setImgSrc] = useState(imagen || './pastel_pollo.jpg');
   const [imgError, setImgError] = useState(false);
 
   const handleImgError = () => {
@@ -14,9 +14,9 @@ export function ProductoCard({ producto, onAddToCart }) {
       // Fallback a foto artesanal según nombre o tipo
       const nombreMin = (nombre || '').toLowerCase();
       if (nombreMin.includes('buñuelo') || nombreMin.includes('pandebono') || nombreMin.includes('queso')) {
-        setImgSrc('/bunuelos.jpg');
+        setImgSrc('./bunuelos.jpg');
       } else {
-        setImgSrc('/pastel_pollo.jpg');
+        setImgSrc('./pastel_pollo.jpg');
       }
     }
   };

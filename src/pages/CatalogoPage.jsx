@@ -65,10 +65,10 @@ export function CatalogoPage({ categoriaActiva, onAddToCart }) {
             </div>
             <div className="spotlight-imagen-wrap">
               <img
-                src={productoEstrella.imagen || '/pastel_pollo.jpg'}
+                src={productoEstrella.imagen || './pastel_pollo.jpg'}
                 alt={productoEstrella.nombre}
                 className="spotlight-imagen"
-                onError={(e) => { e.currentTarget.src = '/pastel_pollo.jpg'; }}
+                onError={(e) => { e.currentTarget.src = './pastel_pollo.jpg'; }}
               />
             </div>
           </div>
