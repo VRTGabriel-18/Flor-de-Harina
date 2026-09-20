@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Banner } from '../components/Layout/Banner';
 import { ProductoCard } from '../components/producto/ProductoCard';
+import { SkeletonGrid } from '../components/producto/SkeletonCard';
 import { useRecurso } from '../hooks/useRecurso';
 import { RECURSOS } from '../resources';
 import { formatearPrecio } from '../utils/formato';
@@ -113,12 +114,7 @@ export function CatalogoPage({ categoriaActiva, onAddToCart }) {
         </div>
       </section>
 
-      {cargando && (
-        <div className="catalogo-cargando">
-          <span className="cargando-icono" aria-hidden="true">🥐</span>
-          <p className="estado-texto">Preparando y cargando los productos más frescos...</p>
-        </div>
-      )}
+      {cargando && <SkeletonGrid cantidad={6} />}
 
       {error && (
         <div className="mensaje mensaje-error" role="alert">
@@ -142,8 +138,8 @@ export function CatalogoPage({ categoriaActiva, onAddToCart }) {
 
       {/* Grilla de Productos */}
       <section className="producto-grid" aria-label="Lista de productos del catálogo">
-        {!cargando && !error && filtrados.map((p) => (
-          <ProductoCard key={p.id} producto={p} onAddToCart={onAddToCart} />
+        {!cargando && !error && filtrados.map((p, idx) => (
+          <ProductoCard key={p.id} producto={p} onAddToCart={onAddToCart} cardIndex={idx} />
         ))}
       </section>
     </>

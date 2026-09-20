@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { formatearPrecio } from '../../utils/formato';
 import { useToast } from '../../hooks/useToast';
 
-export function ProductoCard({ producto, onAddToCart }) {
+export function ProductoCard({ producto, onAddToCart, cardIndex = 0 }) {
   const { mostrarToast } = useToast();
   const { nombre, descripcion, precio, imagen, tag, categoria } = producto;
   const [imgSrc, setImgSrc] = useState(imagen || './pastel_pollo.jpg');
@@ -22,7 +22,10 @@ export function ProductoCard({ producto, onAddToCart }) {
   };
 
   return (
-    <article className="producto-card-premium">
+    <article
+      className="producto-card-premium"
+      style={{ '--card-index': Math.min(cardIndex, 12) }}
+    >
       <div className="producto-card-cabecera">
         {tag ? (
           <span className="producto-card-tag">{tag}</span>
