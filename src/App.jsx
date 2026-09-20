@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Footer } from './components/Layout/Footer';
+import { CarritoFlotante } from './components/Layout/CarritoFlotante';
 import { GestionRecurso } from './components/recurso/GestionRecurso';
 import { CatalogoPage } from './pages/CatalogoPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -131,6 +132,8 @@ function App() {
       </main>
 
       <Footer categorias={categorias} onSelectCategoria={seleccionarCategoria} informacion={informacion} />
+
+      <CarritoFlotante cartCount={cartCount} />
     </div>
   );
 }
