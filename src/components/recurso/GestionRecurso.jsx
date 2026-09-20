@@ -10,6 +10,7 @@ export function GestionRecurso({ recurso, onCambio }) {
   const config = RECURSOS[recurso];
   const { mostrarToast } = useToast();
   const { datos, cargando, error, recargar } = useRecurso(config.ruta);
+  const { datos: listaEstados } = useRecurso(recurso === 'ordenes' ? RECURSOS.estados.ruta : null);
 
   const [editando, setEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
@@ -19,6 +20,28 @@ export function GestionRecurso({ recurso, onCambio }) {
   const refrescar = () => {
     recargar();
     if (onCambio) onCambio(); // avisa a quien dependa de estos datos (ej. el menú de categorías)
+  };
+
+  const handleActualizarEstado = async (fila, nuevoEstado) => {
+    try {
+      const datosActualizados = { ...fila, estado: nuevoEstado };
+      await actualizar(config.ruta, fila.id, datosActualizados);
+      
+      if (nuevoEstado?.toLowerCase() === 'en camino') {
+        mostrarToast({
+          tipo: 'ok',
+          texto: `🛵 ¡Pedido #${fila.id} marcado como "En Camino"! Salió y está siendo entregado exitosamente.`,
+        });
+      } else {
+        mostrarToast({
+          tipo: 'ok',
+          texto: `Estado de orden #${fila.id} cambiado a "${nuevoEstado}".`,
+        });
+      }
+      refrescar();
+    } catch (err) {
+      mostrarToast({ tipo: 'error', texto: `No se pudo cambiar el estado. ${err.message}` });
+    }
   };
 
   const handleGuardar = async (datosFormulario) => {
@@ -100,6 +123,8 @@ export function GestionRecurso({ recurso, onCambio }) {
         onReintentar={recargar}
         onEditar={handleEditar}
         onEliminar={handleEliminar}
+        onActualizarEstado={handleActualizarEstado}
+        opcionesEstados={listaEstados}
       />
     </section>
   );

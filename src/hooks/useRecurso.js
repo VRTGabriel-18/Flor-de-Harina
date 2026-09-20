@@ -10,6 +10,11 @@ export function useRecurso(ruta) {
   const recargar = useCallback(() => setVersion((v) => v + 1), []);
 
   useEffect(() => {
+    if (!ruta) {
+      setResultado({ ruta: null, datos: [], error: null });
+      return;
+    }
+
     let activo = true;
 
     listar(ruta)
@@ -27,7 +32,7 @@ export function useRecurso(ruta) {
 
   return {
     datos: resultado.datos,
-    cargando: resultado.ruta !== ruta,
+    cargando: Boolean(ruta && resultado.ruta !== ruta),
     error: resultado.error,
     recargar,
   };

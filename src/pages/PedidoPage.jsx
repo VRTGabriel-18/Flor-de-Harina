@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatearPrecio } from '../utils/formato';
-import { crear } from '../services/apiService';
+import { crear, listar, actualizar } from '../services/apiService';
 import { useRecurso } from '../hooks/useRecurso';
 import { useAuth } from '../hooks/useAuth';
 import { RECURSOS } from '../resources';
@@ -38,6 +38,10 @@ export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada
     const estadoInicial = estados.find((estado) => estado.nombre?.toLowerCase() === 'pendiente')?.nombre
       ?? estados[0]?.nombre
       ?? 'Pendiente';
+
+    // Resumen legible del pedido para visualización rápida
+    const resumenPedido = carrito.map(({ producto, cantidad }) => `${cantidad}x ${producto.nombre}`).join(', ');
+
     const datosOrden = {
       cliente: nombre,
       direccion,
@@ -48,13 +52,41 @@ export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada
         precio: precioNumerico(producto.precio),
       })),
       total,
-      fecha: new Date().toISOString(),
+      fecha: new Date().toISOString().split('T')[0],
       estado: estadoInicial,
       ...(usuario ? { usuario: usuario.id } : {}),
     };
 
     try {
+      // 1. Crear la orden en la gestión de órdenes
       const orden = await crear(RECURSOS.ordenes.ruta, datosOrden);
+
+      // 2. Sincronizar en la gestión de clientes (nombre, dirección, último pedido)
+      try {
+        const clientesActuales = await listar(RECURSOS.clientes.ruta);
+        const clienteExistente = Array.isArray(clientesActuales)
+          ? clientesActuales.find((c) => (c.nombre ?? '').trim().toLowerCase() === nombre.toLowerCase())
+          : null;
+
+        const infoCliente = {
+          nombre,
+          direccion,
+          pedido: resumenPedido,
+          estado: true,
+        };
+
+        if (clienteExistente) {
+          await actualizar(RECURSOS.clientes.ruta, clienteExistente.id, {
+            ...clienteExistente,
+            ...infoCliente,
+          });
+        } else {
+          await crear(RECURSOS.clientes.ruta, infoCliente);
+        }
+      } catch (errCliente) {
+        console.warn('Nota: No se pudo actualizar cliente en MockAPI:', errCliente);
+      }
+
       setOrdenCreada(orden);
       mostrarToast({ tipo: 'ok', texto: 'Orden creada correctamente.' });
       onOrdenCreada();
@@ -84,20 +116,22 @@ export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada
   return (
     <section className="gestion pedido">
       <div className="gestion-encabezado">
-        <h1>Mi pedido</h1>
+        <h1>🛒 Mi pedido</h1>
         <p>Revisa los productos y cantidades antes de finalizar tu compra.</p>
       </div>
 
       {carrito.length === 0 ? (
-        <div className="vacio">
-          <p>Aún no has agregado productos a tu pedido.</p>
-          <Link to="/" className="btn btn-primario">Ver catálogo</Link>
+        <div className="vacio vacio-pedido">
+          <span className="vacio-icono">🥐</span>
+          <h3>Tu carrito está vacío</h3>
+          <p>Explora nuestras delicias recién horneadas y agrégalas a tu pedido.</p>
+          <Link to="/" className="btn btn-primario">Explorar catálogo</Link>
         </div>
       ) : (
-        <div className="panel">
+        <div className="panel panel-pedido">
           {mensaje && <div className={`mensaje mensaje-${mensaje.tipo}`} role="alert">{mensaje.texto}</div>}
           <div className="datos-entrega">
-            <h3>Datos de entrega</h3>
+            <h3>📍 Datos de entrega</h3>
             <p className="texto-suave">Puedes pedir sin iniciar sesión. Solo necesitamos estos datos.</p>
             <div className="form-grid">
               <div className="campo">
@@ -126,6 +160,11 @@ export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada
               </div>
             </div>
           </div>
+
+          <div className="pedido-separador">
+            <h3>🛍️ Productos seleccionados</h3>
+          </div>
+
           <div className="pedido-lista">
             {carrito.map(({ producto, cantidad }) => (
               <article className="pedido-item" key={producto.id}>

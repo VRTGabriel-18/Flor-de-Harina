@@ -1,8 +1,47 @@
 import { formatearPrecio } from '../../utils/formato';
+import { SelectorEstadoBadge } from './SelectorEstadoBadge';
 
 const hayValor = (v) => v !== undefined && v !== null && v !== '';
 
-function Celda({ columna, fila }) {
+function renderProductos(valor) {
+  if (!hayValor(valor)) return <span className="texto-suave">—</span>;
+
+  let lista = [];
+  if (Array.isArray(valor)) {
+    lista = valor;
+  } else if (typeof valor === 'string') {
+    try {
+      const parseado = JSON.parse(valor);
+      if (Array.isArray(parseado)) {
+        lista = parseado;
+      } else {
+        return <span className="chip-producto">🥟 {valor}</span>;
+      }
+    } catch {
+      return <span className="chip-producto">🥟 {valor}</span>;
+    }
+  } else if (typeof valor === 'object') {
+    lista = [valor];
+  }
+
+  if (lista.length === 0) return <span className="texto-suave">—</span>;
+
+  return (
+    <div className="lista-chips-productos">
+      {lista.map((item, idx) => {
+        const cant = item.cantidad ? `${item.cantidad}x ` : '';
+        const nom = item.nombre || item.producto || (typeof item === 'string' ? item : 'Producto');
+        return (
+          <span key={idx} className="chip-producto">
+            🥟 {cant}{nom}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function Celda({ columna, fila, onActualizarEstado, opcionesEstados }) {
   const valor = fila[columna.campo];
 
   if (columna.tipo === 'imagen') {
@@ -11,13 +50,53 @@ function Celda({ columna, fila }) {
       : <span className="miniatura miniatura-vacia" aria-hidden="true">🥐</span>;
   }
   if (columna.tipo === 'precio') return <strong>{formatearPrecio(valor)}</strong>;
+  if (columna.tipo === 'productos' || columna.campo === 'productos' || columna.campo === 'pedido') {
+    return renderProductos(valor);
+  }
+  if (columna.tipo === 'fecha' && hayValor(valor)) {
+    try {
+      const f = new Date(valor);
+      return !isNaN(f.getTime()) ? f.toLocaleDateString('es-CO') : String(valor);
+    } catch {
+      return String(valor);
+    }
+  }
+  if (columna.campo === 'direccion' && hayValor(valor)) {
+    return <span className="direccion-texto">📍 {valor}</span>;
+  }
+  if (columna.tipo === 'estado-interactivo') {
+    return (
+      <SelectorEstadoBadge
+        valor={valor}
+        fila={fila}
+        onCambio={(nuevoEstado) => onActualizarEstado && onActualizarEstado(fila, nuevoEstado)}
+        opciones={opcionesEstados}
+      />
+    );
+  }
   if (columna.tipo === 'badge') {
-    return hayValor(valor) ? <span className="badge">{valor}</span> : <span className="texto-suave">—</span>;
+    if (typeof valor === 'boolean') {
+      return <span className={`badge ${valor ? 'badge-activo' : 'badge-inactivo'}`}>{valor ? 'Activo' : 'Inactivo'}</span>;
+    }
+    return hayValor(valor) ? <span className="badge">{String(valor)}</span> : <span className="texto-suave">—</span>;
+  }
+  if (typeof valor === 'boolean') {
+    return valor ? 'Sí' : 'No';
   }
   return hayValor(valor) ? String(valor) : <span className="texto-suave">—</span>;
 }
 
-export function ListaRecurso({ config, registros, cargando, error, onReintentar, onEditar, onEliminar }) {
+export function ListaRecurso({
+  config,
+  registros,
+  cargando,
+  error,
+  onReintentar,
+  onEditar,
+  onEliminar,
+  onActualizarEstado,
+  opcionesEstados,
+}) {
   if (cargando) {
     return <p className="estado-texto">Cargando {config.titulo.toLowerCase()}...</p>;
   }
@@ -60,7 +139,14 @@ export function ListaRecurso({ config, registros, cargando, error, onReintentar,
               <tr key={fila.id}>
                 <td className="texto-suave" data-label="ID">#{fila.id}</td>
                 {config.columnas.map((col) => (
-                  <td key={col.campo} data-label={col.titulo}><Celda columna={col} fila={fila} /></td>
+                  <td key={col.campo} data-label={col.titulo}>
+                    <Celda
+                      columna={col}
+                      fila={fila}
+                      onActualizarEstado={onActualizarEstado}
+                      opcionesEstados={opcionesEstados}
+                    />
+                  </td>
                 ))}
                 <td className="derecha acciones">
                   <button type="button" className="btn btn-suave btn-chico" onClick={() => onEditar(fila)}>Editar</button>

@@ -41,51 +41,73 @@ export function LoginPage() {
   };
 
   return (
-    <section className="gestion">
-      <div className="gestion-encabezado">
-        <h1>Iniciar sesión</h1>
-        <p>Accede con un usuario registrado en Flor de Harina.</p>
-      </div>
+    <section className="login-page">
+      <div className="login-card">
+        <button type="button" className="login-close" aria-label="Cerrar" onClick={() => navigate('/')}>
+          ×
+        </button>
 
-      {estado && <div className={`mensaje mensaje-${estado.tipo}`} role="alert">{estado.texto}</div>}
+        <div className="login-header">
+          <span className="login-logo-icon" aria-hidden="true">🥐</span>
+          <h1>Iniciar Sesión</h1>
+          <p className="login-subtitulo">Accede al panel de Flor de Harina</p>
+        </div>
 
-      <div className="panel">
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="campo">
-              <label htmlFor="login-nombre">Nombre de usuario</label>
+        {estado && <div className={`mensaje mensaje-${estado.tipo}`} role="alert">{estado.texto}</div>}
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="login-field">
+            <label htmlFor="login-nombre">Email</label>
+            <div className="login-input-wrap">
               <input
                 id="login-nombre"
-                className="input"
+                className="login-input"
                 value={nombre}
                 onChange={(evento) => setNombre(evento.target.value)}
                 required
                 autoComplete="username"
               />
+              <span className="login-input-icon" aria-hidden="true">✉</span>
             </div>
+          </div>
 
-            <div className="campo">
-              <label htmlFor="login-clave">Clave</label>
+          <div className="login-field">
+            <label htmlFor="login-clave">Password</label>
+            <div className="login-input-wrap">
               <input
                 id="login-clave"
-                className="input"
+                className="login-input"
                 type="password"
                 value={clave}
                 onChange={(evento) => setClave(evento.target.value)}
                 required
                 autoComplete="current-password"
               />
+              <span className="login-input-icon" aria-hidden="true">◌</span>
             </div>
           </div>
 
-          <div className="form-acciones">
-            <button type="submit" className="btn btn-primario" disabled={cargando}>
-              {cargando ? 'Validando...' : 'Iniciar sesión'}
-            </button>
-            <Link to="/pedido" className="btn btn-suave">
-              Continuar como cliente
+          <div className="login-options">
+            <label className="login-check">
+              <input type="checkbox" defaultChecked />
+              <span>Remember me</span>
+            </label>
+            <Link to="/login" className="login-forgot">Forgot Password?</Link>
+          </div>
+
+          <button type="submit" className="login-btn" disabled={cargando}>
+            {cargando ? 'Validando...' : 'Login'}
+          </button>
+
+          <div className="login-secondary-row">
+            <Link to="/pedido" className="login-customer-btn">
+              Ingresar como cliente
             </Link>
           </div>
+
+          <p className="login-register">
+            Don&apos;t have an account? <Link to="/pedido">Register</Link>
+          </p>
         </form>
       </div>
     </section>
