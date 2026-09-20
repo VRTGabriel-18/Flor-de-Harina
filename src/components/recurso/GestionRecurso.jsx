@@ -5,17 +5,22 @@ import { crear, actualizar, eliminar } from '../../services/apiService';
 import { FormularioRecurso } from './FormularioRecurso';
 import { ListaRecurso } from './ListaRecurso';
 import { useToast } from '../../hooks/useToast';
+import { ConfirmarModal } from './ConfirmarModal';
 
 export function GestionRecurso({ recurso, onCambio }) {
   const config = RECURSOS[recurso];
   const { mostrarToast } = useToast();
   const { datos, cargando, error, recargar } = useRecurso(config.ruta);
   const { datos: listaEstados } = useRecurso(recurso === 'ordenes' ? RECURSOS.estados.ruta : null);
+  // Cargar productos para validar eliminación de categorías
+  const { datos: productos } = useRecurso(recurso === 'categorias' ? RECURSOS.productos.ruta : null);
 
   const [editando, setEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
-  const [formKey, setFormKey] = useState(0); // al cambiar, el formulario se vacía
+  const [formKey, setFormKey] = useState(0);
+  // Modal de confirmación
+  const [filaAEliminar, setFilaAEliminar] = useState(null);
 
   const refrescar = () => {
     recargar();
@@ -79,8 +84,28 @@ export function GestionRecurso({ recurso, onCambio }) {
     setFormKey((k) => k + 1);
   };
 
-  const handleEliminar = async (fila) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer.')) return;
+  const handleEliminar = (fila) => {
+    // Validación previa: no permitir borrar categoría si tiene productos asociados
+    if (recurso === 'categorias' && productos && productos.length > 0) {
+      const productosEnCategoria = productos.filter(
+        (p) => String(p.categoria).trim().toLowerCase() === String(fila.nombre).trim().toLowerCase()
+      );
+      if (productosEnCategoria.length > 0) {
+        mostrarToast({
+          tipo: 'error',
+          texto: `No se puede eliminar la categoría "${fila.nombre}" porque tiene ${productosEnCategoria.length} producto(s) asociado(s). Elimina o reasigna los productos primero.`,
+        });
+        return;
+      }
+    }
+    // Abrir modal de confirmación
+    setFilaAEliminar(fila);
+  };
+
+  const confirmarEliminacion = async () => {
+    if (!filaAEliminar) return;
+    const fila = filaAEliminar;
+    setFilaAEliminar(null);
 
     setMensaje(null);
     try {
@@ -93,6 +118,10 @@ export function GestionRecurso({ recurso, onCambio }) {
       mostrarToast({ tipo: 'error', texto: `No se pudo eliminar ${config.singular.toLowerCase()}.` });
       setMensaje({ tipo: 'error', texto: `No se pudo eliminar. ${err.message}.` });
     }
+  };
+
+  const cancelarEliminacion = () => {
+    setFilaAEliminar(null);
   };
 
   return (
@@ -125,6 +154,18 @@ export function GestionRecurso({ recurso, onCambio }) {
         onEliminar={handleEliminar}
         onActualizarEstado={handleActualizarEstado}
         opcionesEstados={listaEstados}
+      />
+
+      {/* Modal de confirmación para eliminar (todos los recursos) */}
+      <ConfirmarModal
+        abierto={!!filaAEliminar}
+        titulo={`Eliminar ${config.singular}`}
+        mensaje={`¿Seguro que deseas eliminar "${filaAEliminar?.nombre ?? filaAEliminar?.id ?? 'este registro'}"? Esta acción no se puede deshacer.`}
+        textoConfirmar="Eliminar"
+        textoCancelar="Cancelar"
+        variante="peligro"
+        onConfirmar={confirmarEliminacion}
+        onCancelar={cancelarEliminacion}
       />
     </section>
   );

@@ -11,6 +11,27 @@ const valorInicial = (campo, registro) => {
   return campo.tipo === 'number' ? String(valor).replace(/[^\d]/g, '') : String(valor);
 };
 
+// Filtra el input según el tipo de campo para permitir solo caracteres válidos
+const filtrarValor = (tipo, valor) => {
+  switch (tipo) {
+    case 'number':
+      // Solo dígitos
+      return valor.replace(/[^\d]/g, '');
+    case 'text':
+    case 'textarea':
+      // Solo letras, números, espacios y puntuación básica (.,-')
+      return valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,\-']/g, '');
+    case 'tel':
+      // Solo dígitos, espacios, +, -, (, )
+      return valor.replace(/[^\d\s+\-()]/g, '');
+    case 'url':
+      // Caracteres válidos para URL
+      return valor.replace(/[^\w\-\.\/\:\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]/g, '');
+    default:
+      return valor;
+  }
+};
+
 function OpcionesSelect({ campo, opciones, valor, onChange, cargando = false }) {
   // Si el registro editado tiene un valor que ya no está en la lista, se conserva para no perderlo.
   const lista = valor && !opciones.includes(valor) ? [valor, ...opciones] : opciones;
@@ -149,9 +170,17 @@ export function FormularioRecurso({ config, registro, guardando, onGuardar, onCa
   const esEdicion = Boolean(registro);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     const campo = config.campos.find((item) => item.name === name);
-    setValores((prev) => ({ ...prev, [name]: campo?.tipo === 'checkbox' ? e.target.checked : value }));
+    
+    if (campo?.tipo === 'checkbox') {
+      setValores((prev) => ({ ...prev, [name]: e.target.checked }));
+      return;
+    }
+
+    // Filtrar el valor según el tipo de campo
+    const valorFiltrado = filtrarValor(campo?.tipo || type, value);
+    setValores((prev) => ({ ...prev, [name]: valorFiltrado }));
   };
 
   const handleSubmit = (e) => {
@@ -233,6 +262,9 @@ export function FormularioRecurso({ config, registro, guardando, onGuardar, onCa
                   required={c.requerido}
                   placeholder={c.placeholder}
                   min={c.tipo === 'number' ? '0' : undefined}
+                  // Mejorar validación y UX en móviles
+                  inputMode={c.tipo === 'number' ? 'numeric' : c.tipo === 'tel' ? 'tel' : c.tipo === 'url' ? 'url' : 'text'}
+                  pattern={c.tipo === 'number' ? '[0-9]*' : c.tipo === 'tel' ? '[\d\s+\-()]*' : undefined}
                   value={valores[c.name]}
                   onChange={handleChange}
                 />

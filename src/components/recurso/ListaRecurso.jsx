@@ -1,7 +1,9 @@
+import { useState, useMemo, useCallback } from 'react';
 import { formatearPrecio } from '../../utils/formato';
 import { SelectorEstadoBadge } from './SelectorEstadoBadge';
 
 const hayValor = (v) => v !== undefined && v !== null && v !== '';
+const TAMANO_PAGINA_DEFAULT = 10;
 
 function renderProductos(valor) {
   if (!hayValor(valor)) return <span className="texto-suave">—</span>;
@@ -86,6 +88,25 @@ function Celda({ columna, fila, onActualizarEstado, opcionesEstados }) {
   return hayValor(valor) ? String(valor) : <span className="texto-suave">—</span>;
 }
 
+// Helpers para búsqueda y ordenación
+function obtenerValorBusqueda(fila, config) {
+  // Busca en campos de texto visibles (nombre, cliente, dirección, etc.)
+  const camposTexto = config.columnas
+    .filter((c) => !['imagen', 'precio', 'badge', 'estado-interactivo', 'productos', 'fecha'].includes(c.tipo))
+    .map((c) => c.campo);
+  
+  return camposTexto
+    .map((campo) => String(fila[campo] ?? ''))
+    .join(' ')
+    .toLowerCase();
+}
+
+function compararValores(a, b, direccion) {
+  if (a === b) return 0;
+  const resultado = a < b ? -1 : 1;
+  return direccion === 'asc' ? resultado : -resultado;
+}
+
 export function ListaRecurso({
   config,
   registros,
@@ -97,6 +118,63 @@ export function ListaRecurso({
   onActualizarEstado,
   opcionesEstados,
 }) {
+  const [busqueda, setBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [tamanoPagina] = useState(TAMANO_PAGINA_DEFAULT);
+  const [orden, setOrden] = useState({ campo: null, direccion: 'asc' });
+
+  // Filtrar y ordenar registros
+  const registrosFiltrados = useMemo(() => {
+    let resultado = [...registros];
+
+    // Búsqueda
+    if (busqueda.trim()) {
+      const termino = busqueda.trim().toLowerCase();
+      resultado = resultado.filter((fila) => 
+        obtenerValorBusqueda(fila, config).includes(termino) ||
+        String(fila.id).includes(termino)
+      );
+    }
+
+    // Ordenación
+    if (orden.campo) {
+      resultado.sort((a, b) => {
+        const valorA = a[orden.campo] ?? '';
+        const valorB = b[orden.campo] ?? '';
+        return compararValores(String(valorA).toLowerCase(), String(valorB).toLowerCase(), orden.direccion);
+      });
+    }
+
+    return resultado;
+  }, [registros, busqueda, orden, config.columnas]);
+
+  // Paginación
+  const totalPaginas = Math.ceil(registrosFiltrados.length / tamanoPagina) || 1;
+  const paginaSegura = Math.min(paginaActual, totalPaginas);
+  const registrosPagina = registrosFiltrados.slice(
+    (paginaSegura - 1) * tamanoPagina,
+    paginaSegura * tamanoPagina
+  );
+
+  const handleOrdenar = useCallback((campo) => {
+    setOrden((prev) => ({
+      campo,
+      direccion: prev.campo === campo && prev.direccion === 'asc' ? 'desc' : 'asc',
+    }));
+    setPaginaActual(1);
+  }, []);
+
+  const handleCambioPagina = useCallback((nuevaPagina) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  }, [totalPaginas]);
+
+  // Reset página al cambiar búsqueda
+  useState(() => {
+    if (busqueda) setPaginaActual(1);
+  });
+
   if (cargando) {
     return <p className="estado-texto">Cargando {config.titulo.toLowerCase()}...</p>;
   }
@@ -118,11 +196,34 @@ export function ListaRecurso({
     );
   }
 
+  // Determinar columnas ordenables (excluir imagen, acciones, badges complejos)
+  const columnasOrdenables = config.columnas.filter(
+    (c) => !['imagen', 'estado-interactivo', 'productos'].includes(c.tipo)
+  );
+
   return (
     <div className="panel">
       <div className="tabla-encabezado">
         <h3 className="panel-titulo">Lista de {config.titulo.toLowerCase()}</h3>
-        <span className="contador">{registros.length} registro(s)</span>
+        <div className="tabla-controles">
+          <div className="buscador">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="buscador-icon" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="search"
+              className="input buscador-input"
+              placeholder={`Buscar ${config.titulo.toLowerCase()}...`}
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              aria-label={`Buscar ${config.titulo.toLowerCase()}`}
+            />
+          </div>
+          <span className="contador">
+            {registrosFiltrados.length} de {registros.length} registro(s)
+          </span>
+        </div>
       </div>
 
       <div className="tabla-scroll">
@@ -130,33 +231,83 @@ export function ListaRecurso({
           <thead>
             <tr>
               <th>ID</th>
-              {config.columnas.map((col) => <th key={col.campo}>{col.titulo}</th>)}
+              {config.columnas.map((col) => (
+                <th
+                  key={col.campo}
+                  className={columnasOrdenables.some((c) => c.campo === col.campo) ? 'ordenable' : ''}
+                  onClick={() => columnasOrdenables.some((c) => c.campo === col.campo) && handleOrdenar(col.campo)}
+                  aria-sort={orden.campo === col.campo ? (orden.direccion === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  <span className="th-contenido">
+                    {col.titulo}
+                    {orden.campo === col.campo && (
+                      <span className="orden-icon" aria-hidden="true">
+                        {orden.direccion === 'asc' ? '▲' : '▼'}
+                      </span>
+                    )}
+                  </span>
+                </th>
+              ))}
               <th className="derecha">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {registros.map((fila) => (
-              <tr key={fila.id}>
-                <td className="texto-suave" data-label="ID">#{fila.id}</td>
-                {config.columnas.map((col) => (
-                  <td key={col.campo} data-label={col.titulo}>
-                    <Celda
-                      columna={col}
-                      fila={fila}
-                      onActualizarEstado={onActualizarEstado}
-                      opcionesEstados={opcionesEstados}
-                    />
-                  </td>
-                ))}
-                <td className="derecha acciones">
-                  <button type="button" className="btn btn-suave btn-chico" onClick={() => onEditar(fila)}>Editar</button>
-                  <button type="button" className="btn btn-peligro btn-chico" onClick={() => onEliminar(fila)}>Eliminar</button>
+            {registrosPagina.length === 0 ? (
+              <tr>
+                <td colSpan={config.columnas.length + 2} className="texto-suave texto-centrado">
+                  No se encontraron resultados para "{busqueda}"
                 </td>
               </tr>
-            ))}
+            ) : (
+              registrosPagina.map((fila) => (
+                <tr key={fila.id}>
+                  <td className="texto-suave" data-label="ID">#{fila.id}</td>
+                  {config.columnas.map((col) => (
+                    <td key={col.campo} data-label={col.titulo}>
+                      <Celda
+                        columna={col}
+                        fila={fila}
+                        onActualizarEstado={onActualizarEstado}
+                        opcionesEstados={opcionesEstados}
+                      />
+                    </td>
+                  ))}
+                  <td className="derecha acciones">
+                    <button type="button" className="btn btn-suave btn-chico" onClick={() => onEditar(fila)}>Editar</button>
+                    <button type="button" className="btn btn-peligro btn-chico" onClick={() => onEliminar(fila)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <nav className="paginacion" aria-label="Paginación de registros">
+          <button
+            type="button"
+            className="btn btn-suave btn-chico"
+            onClick={() => handleCambioPagina(paginaSegura - 1)}
+            disabled={paginaSegura === 1}
+            aria-label="Página anterior"
+          >
+            ‹ Anterior
+          </button>
+          <span className="paginacion-info" aria-live="polite">
+            Página {paginaSegura} de {totalPaginas}
+          </span>
+          <button
+            type="button"
+            className="btn btn-suave btn-chico"
+            onClick={() => handleCambioPagina(paginaSegura + 1)}
+            disabled={paginaSegura === totalPaginas}
+            aria-label="Página siguiente"
+          >
+            Siguiente ›
+          </button>
+        </nav>
+      )}
     </div>
   );
 }

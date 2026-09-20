@@ -7,6 +7,19 @@ import { useAuth } from '../hooks/useAuth';
 import { RECURSOS } from '../resources';
 import { useToast } from '../hooks/useToast';
 
+// Filtra el input según el tipo (reutiliza la lógica de FormularioRecurso)
+const filtrarValor = (tipo, valor) => {
+  switch (tipo) {
+    case 'text':
+      // Solo letras, números, espacios y puntuación básica (.,-')
+      return valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,\-']/g, '');
+    case 'tel':
+      return valor.replace(/[^\d\s+\-()]/g, '');
+    default:
+      return valor;
+  }
+};
+
 const precioNumerico = (valor) => Number(valor) || 0;
 
 export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada }) {
@@ -141,7 +154,7 @@ export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada
                   className="input"
                   type="text"
                   value={datosEntrega.nombre}
-                  onChange={(evento) => setDatosEntrega((actual) => ({ ...actual, nombre: evento.target.value }))}
+                  onChange={(evento) => setDatosEntrega((actual) => ({ ...actual, nombre: filtrarValor('text', evento.target.value) }))}
                   placeholder="Ej. María Pérez"
                   required
                 />
@@ -153,7 +166,7 @@ export function PedidoPage({ carrito, onCambiarCantidad, onQuitar, onOrdenCreada
                   className="input"
                   type="text"
                   value={datosEntrega.direccion}
-                  onChange={(evento) => setDatosEntrega((actual) => ({ ...actual, direccion: evento.target.value }))}
+                  onChange={(evento) => setDatosEntrega((actual) => ({ ...actual, direccion: filtrarValor('text', evento.target.value) }))}
                   placeholder="Ej. Calle 10 #20-30, Bogotá"
                   required
                 />
