@@ -1972,6 +1972,7 @@ button {
 .vacio-pedido {
   padding: 60px 24px;
   text-align: center;
+  width: 100%;
 }
 
 .vacio-icono {
