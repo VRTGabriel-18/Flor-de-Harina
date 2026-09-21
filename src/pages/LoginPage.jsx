@@ -9,7 +9,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { iniciarSesion } = useAuth();
   const { mostrarToast } = useToast();
-  const [nombre, setNombre] = useState('');
+  const [correo, setCorreo] = useState('');
   const [clave, setClave] = useState('');
   const [estado, setEstado] = useState(null);
   const [cargando, setCargando] = useState(false);
@@ -21,11 +21,19 @@ export function LoginPage() {
 
     try {
       const usuarios = await listar(RECURSOS.usuarios.ruta);
-      const usuario = usuarios.find((registro) => registro.nombre === nombre.trim() && registro.clave === clave);
+      const usuario = usuarios.find(
+        (registro) => registro.correo?.toLowerCase().trim() === correo.toLowerCase().trim() && registro.clave === clave
+      );
 
       if (!usuario) {
-        mostrarToast({ tipo: 'error', texto: 'El nombre o la clave no son correctos.' });
-        setEstado({ tipo: 'error', texto: 'El nombre o la clave no son correctos.' });
+        mostrarToast({ tipo: 'error', texto: 'El correo o la clave no son correctos.' });
+        setEstado({ tipo: 'error', texto: 'El correo o la clave no son correctos.' });
+        return;
+      }
+
+      if (!usuario.estado) {
+        mostrarToast({ tipo: 'error', texto: 'El usuario está inactivo. Contacte al administrador.' });
+        setEstado({ tipo: 'error', texto: 'El usuario está inactivo. Contacte al administrador.' });
         return;
       }
 
@@ -57,22 +65,24 @@ export function LoginPage() {
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
-            <label htmlFor="login-nombre">Email</label>
+            <label htmlFor="login-correo">Correo electrónico</label>
             <div className="login-input-wrap">
               <input
-                id="login-nombre"
+                id="login-correo"
                 className="login-input"
-                value={nombre}
-                onChange={(evento) => setNombre(evento.target.value)}
+                type="email"
+                value={correo}
+                onChange={(evento) => setCorreo(evento.target.value)}
                 required
-                autoComplete="username"
+                autoComplete="email"
+                placeholder="Ej. cajero@flordeharina.com"
               />
               <span className="login-input-icon" aria-hidden="true">✉</span>
             </div>
           </div>
 
           <div className="login-field">
-            <label htmlFor="login-clave">Password</label>
+            <label htmlFor="login-clave">Contraseña</label>
             <div className="login-input-wrap">
               <input
                 id="login-clave"
@@ -82,6 +92,7 @@ export function LoginPage() {
                 onChange={(evento) => setClave(evento.target.value)}
                 required
                 autoComplete="current-password"
+                placeholder="••••••••"
               />
               <span className="login-input-icon" aria-hidden="true">◌</span>
             </div>
@@ -90,13 +101,13 @@ export function LoginPage() {
           <div className="login-options">
             <label className="login-check">
               <input type="checkbox" defaultChecked />
-              <span>Remember me</span>
+              <span>Recordarme</span>
             </label>
-            <Link to="/login" className="login-forgot">Forgot Password?</Link>
+            <Link to="/login" className="login-forgot">¿Olvidó su contraseña?</Link>
           </div>
 
           <button type="submit" className="login-btn" disabled={cargando}>
-            {cargando ? 'Validando...' : 'Login'}
+            {cargando ? 'Validando...' : 'Iniciar sesión'}
           </button>
 
           <div className="login-secondary-row">
@@ -106,7 +117,7 @@ export function LoginPage() {
           </div>
 
           <p className="login-register">
-            Don&apos;t have an account? <Link to="/pedido">Register</Link>
+            ¿No tiene cuenta? <Link to="/pedido">Registrarse</Link>
           </p>
         </form>
       </div>

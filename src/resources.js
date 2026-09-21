@@ -73,12 +73,14 @@ export const RECURSOS = {
     descripcion: 'Personal de la pastelería que usa el sistema.',
     campos: [
       { name: 'nombre', label: 'Nombre completo', tipo: 'text', requerido: true, placeholder: 'Ej. Carlos Gómez' },
+      { name: 'correo', label: 'Correo electrónico', tipo: 'email', requerido: true, placeholder: 'Ej. carlos@flordeharina.com' },
       { name: 'clave', label: 'Clave', tipo: 'password', requerido: true, placeholder: 'Clave del usuario' },
       { name: 'estado', label: 'Activo', tipo: 'checkbox' },
       { name: 'rol', label: 'Rol', tipo: 'select', opciones: ['Panadero', 'Cajero', 'Administrador'], requerido: true },
     ],
     columnas: [
       { campo: 'nombre', titulo: 'Nombre' },
+      { campo: 'correo', titulo: 'Correo' },
       { campo: 'estado', titulo: 'Activo', tipo: 'badge' },
       { campo: 'rol', titulo: 'Rol', tipo: 'badge' },
     ],
