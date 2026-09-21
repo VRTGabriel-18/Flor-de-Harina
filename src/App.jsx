@@ -9,6 +9,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { LoginPage } from './pages/LoginPage';
 import { PedidoPage } from './pages/PedidoPage';
 import { RutaProtegida } from './components/RutaProtegida';
+import { ScrollToTop } from './components/ScrollToTop';
 import { useRecurso } from './hooks/useRecurso';
 import { RECURSOS } from './resources';
 
@@ -81,6 +82,7 @@ function App() {
       />
 
       <main className="app-contenido">
+        <ScrollToTop />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
